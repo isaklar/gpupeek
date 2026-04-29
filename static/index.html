@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gpupeek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset & Design Tokens ─── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0a0b;
+  --bg-elevated: #111113;
+  --bg-card: #16161a;
+  --text: #ededef;
+  --text-muted: #8b8b8e;
+  --accent: #6c63ff;
+  --accent-2: #00d4aa;
+  --gradient: linear-gradient(135deg, #6c63ff, #00d4aa);
+  --gradient-text: linear-gradient(135deg, #6c63ff 0%, #00d4aa 50%, #6c63ff 100%);
+  --border: rgba(255, 255, 255, 0.06);
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --danger: #ff5050;
+  --warning: #ffaa00;
+}
+
+html { font-size: 15px; }
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+::selection { background: var(--accent); color: #fff; }
+
+.mono {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.gradient-text {
+  background: var(--gradient-text);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+
+@keyframes shimmer { to { background-position: 200% center; } }
+
+/* ─── Cursor Glow ─── */
+.cursor-glow {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(108, 99, 255, 0.07) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  transform: translate(-50%, -50%);
+  transition: left 0.3s ease, top 0.3s ease;
+}
+
+/* ─── Grid Background ─── */
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Navigation ─── */
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 1.5rem;
+  z-index: 100;
+  background: rgba(10, 10, 11, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-brand {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.brand-bracket { color: var(--accent); }
+
+.nav-gpu-name {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.gpu-vram-badge {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--accent-2);
+  padding: 0.2rem 0.6rem;
+  border: 1px solid rgba(0, 212, 170, 0.2);
+  border-radius: 100px;
+  background: rgba(0, 212, 170, 0.05);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.03);
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  animation: pulse 2s ease infinite;
+}
+
+.pulse-dot-disconnected {
+  background: var(--danger);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.4); }
+  50% { opacity: 0.8; box-shadow: 0 0 0 8px rgba(0, 212, 170, 0); }
+}
+
+/* ─── Dashboard Grid ─── */
+.dashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 1rem;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+/* ─── Card ─── */
+.card {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  overflow: hidden;
+  transition: border-color 0.4s var(--ease);
+}
+
+.card:hover {
+  border-color: rgba(108, 99, 255, 0.2);
+}
+
+.card-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.03) 45%, transparent 50%);
+  pointer-events: none;
+}
+
+.card-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.label-line {
+  width: 20px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+}
+
+.label-text {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ─── Big Metric ─── */
+.metric-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+.metric-value {
+  font-size: 2.25rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-unit {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.metric-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Progress Bar ─── */
+.progress-track {
+  height: 4px;
+  background: var(--bg-elevated);
+  border-radius: 100px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--gradient);
+  border-radius: 100px;
+  transition: width 0.8s var(--ease);
+}
+
+.progress-fill-warn {
+  background: linear-gradient(135deg, var(--warning), var(--danger));
+}
+
+/* ─── Sparkline ─── */
+.sparkline-container {
+  margin-top: 0.6rem;
+  height: 35px;
+  position: relative;
+}
+
+.sparkline {
+  width: 100%;
+  height: 100%;
+}
+
+.sparkline-line {
+  fill: none;
+  stroke: url(#sparkGradient);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sparkline-area {
+  fill: url(#sparkAreaGradient);
+}
+
+/* ─── Temperature Card ─── */
+.temp-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.temp-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.9rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.3s var(--ease);
+}
+
+.temp-item-hot {
+  border-color: rgba(255, 80, 80, 0.3);
+  box-shadow: 0 0 20px rgba(255, 80, 80, 0.05);
+}
+
+.temp-item-warm {
+  border-color: rgba(255, 170, 0, 0.3);
+}
+
+.temp-label {
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.temp-label-sub {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.temp-value {
+  font-family: var(--mono);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.temp-cool { color: var(--accent-2); }
+.temp-warm { color: var(--warning); }
+.temp-hot { color: var(--danger); }
+
+/* ─── Power Card ─── */
+.power-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.4rem;
+}
+
+.power-cap {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+}
+
+.power-pct {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ─── Fan Card ─── */
+.fan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.6rem;
+}
+
+.fan-stats {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.fan-stat {
+  text-align: center;
+}
+
+.fan-stat-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.fan-stat-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.15rem;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 1024px) {
+  .dashboard { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .navbar { padding: 0.5rem 1rem; }
+  .dashboard { grid-template-columns: 1fr; padding: 3rem 1rem 1rem; }
+  .cursor-glow { display: none; }
+  .nav-gpu-name { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="cursor-glow" id="cursorGlow"></div>
+<div class="grid-bg"></div>
+
+<nav class="navbar">
+  <div class="nav-left">
+    <a href="#" class="nav-brand">
+      <span class="brand-bracket">{</span>gpu<span class="brand-bracket">}</span>peek
+    </a>
+    <span class="nav-gpu-name" id="gpuName">detecting…</span>
+  </div>
+  <div class="nav-right">
+    <span class="gpu-vram-badge" id="gpuVramBadge" style="display:none">—</span>
+    <div class="status-badge">
+      <span class="pulse-dot" id="statusDot"></span>
+      <span id="statusText">connecting…</span>
+    </div>
+  </div>
+</nav>
+
+<div class="dashboard">
+  <!-- GPU Utilization -->
+  <div class="card">
+    <div class="card-shine"></div>
+    <div class="card-label">
+      <div class="label-line"></div>
+      <span class="label-text">GPU Utilization</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-value gradient-text" id="gpuUtil">—</span>
+      <span class="metric-unit">%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="gpuUtilBar" style="width:0%"></div>
+    </div>
+    <div class="sparkline-container">
+      <svg class="sparkline" viewBox="0 0 200 50" preserveAspectRatio="none" id="utilSparkline">
+        <defs>
+          <linearGradient id="sparkGradient" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#6c63ff" />
+            <stop offset="100%" stop-color="#00d4aa" />
+          </linearGradient>
+          <linearGradient id="sparkAreaGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="rgba(108, 99, 255, 0.15)" />
+            <stop offset="100%" stop-color="rgba(108, 99, 255, 0)" />
+          </linearGradient>
+        </defs>
+        <path class="sparkline-area" id="utilArea"></path>
+        <path class="sparkline-line" id="utilLine"></path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- VRAM Usage -->
+  <div class="card">
+    <div class="card-shine"></div>
+    <div class="card-label">
+      <div class="label-line"></div>
+      <span class="label-text">VRAM Usage</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-value gradient-text" id="vramUsed">—</span>
+      <span class="metric-unit">MB</span>
+    </div>
+    <div class="metric-sub" id="vramDetail">— / — MB</div>
+    <div class="progress-track">
+      <div class="progress-fill" id="vramBar" style="width:0%"></div>
+    </div>
+    <div class="sparkline-container">
+      <svg class="sparkline" viewBox="0 0 200 50" preserveAspectRatio="none">
+        <path class="sparkline-area" id="vramArea"></path>
+        <path class="sparkline-line" id="vramLine"></path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Temperatures -->
+  <div class="card">
+    <div class="card-shine"></div>
+    <div class="card-label">
+      <div class="label-line"></div>
+      <span class="label-text">Temperatures</span>
+    </div>
+    <div class="temp-grid">
+      <div class="temp-item" id="tempHotspotItem">
+        <div>
+          <div class="temp-label">Hotspot <span class="temp-label-sub">Junction</span></div>
+        </div>
+        <span class="temp-value" id="tempHotspot">—°C</span>
+      </div>
+      <div class="temp-item" id="tempEdgeItem">
+        <div>
+          <div class="temp-label">Edge <span class="temp-label-sub">GPU Die</span></div>
+        </div>
+        <span class="temp-value" id="tempEdge">—°C</span>
+      </div>
+      <div class="temp-item" id="tempMemItem">
+        <div>
+          <div class="temp-label">Memory <span class="temp-label-sub">VRAM</span></div>
+        </div>
+        <span class="temp-value" id="tempMem">—°C</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Power -->
+  <div class="card">
+    <div class="card-shine"></div>
+    <div class="card-label">
+      <div class="label-line"></div>
+      <span class="label-text">Power Draw</span>
+    </div>
+    <div class="metric-row">
+      <span class="metric-value gradient-text" id="powerWatts">—</span>
+      <span class="metric-unit">W</span>
+    </div>
+    <div class="metric-sub" id="powerPct">— % of cap</div>
+    <div class="progress-track">
+      <div class="progress-fill" id="powerBar" style="width:0%"></div>
+    </div>
+    <div class="power-detail">
+      <span class="power-cap" id="powerCap">Cap: — W</span>
+    </div>
+    <div class="sparkline-container">
+      <svg class="sparkline" viewBox="0 0 200 50" preserveAspectRatio="none">
+        <path class="sparkline-area" id="powerArea"></path>
+        <path class="sparkline-line" id="powerLine"></path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Fan Speed -->
+  <div class="card" id="fanCard">
+    <div class="card-shine"></div>
+    <div class="card-label">
+      <div class="label-line"></div>
+      <span class="label-text">Fan Speed</span>
+    </div>
+    <div class="fan-header">
+      <div class="fan-stats">
+        <div class="fan-stat">
+          <div class="fan-stat-value gradient-text" id="fanRpm">—</div>
+          <div class="fan-stat-label">RPM</div>
+        </div>
+        <div class="fan-stat">
+          <div class="fan-stat-value" id="fanPct">—</div>
+          <div class="fan-stat-label">% Speed</div>
+        </div>
+      </div>
+      <span class="mono" id="fanMax">Max: — RPM</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="fanBar" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const HISTORY_LEN = 60;
+const history = {
+  util: [],
+  vram: [],
+  power: [],
+};
+
+function setStatus(connected) {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  if (connected) {
+    dot.classList.remove('pulse-dot-disconnected');
+    txt.textContent = 'live';
+  } else {
+    dot.classList.add('pulse-dot-disconnected');
+    txt.textContent = 'disconnected';
+  }
+}
+
+function tempClass(temp) {
+  if (temp >= 85) return 'hot';
+  if (temp >= 65) return 'warm';
+  return 'cool';
+}
+
+function setTemp(elId, itemId, temp) {
+  const el = document.getElementById(elId);
+  const item = document.getElementById(itemId);
+  if (temp == null) {
+    el.textContent = '—';
+    el.className = 'temp-value temp-cool';
+    item.className = 'temp-item';
+    return;
+  }
+  const cls = tempClass(temp);
+  el.textContent = temp.toFixed(1) + '°C';
+  el.className = 'temp-value temp-' + cls;
+  item.className = 'temp-item' + (cls === 'hot' ? ' temp-item-hot' : cls === 'warm' ? ' temp-item-warm' : '');
+}
+
+function buildSparkPath(data, max) {
+  if (data.length < 2) return { line: '', area: '' };
+  const w = 200, h = 50;
+  const step = w / (HISTORY_LEN - 1);
+  const points = data.map((v, i) => {
+    const x = i * step;
+    const y = h - (v / max) * h;
+    return [x, y];
+  });
+  const line = 'M' + points.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L');
+  const area = line + 'L' + points[points.length - 1][0].toFixed(1) + ',' + h + 'L' + points[0][0].toFixed(1) + ',' + h + 'Z';
+  return { line, area };
+}
+
+function updateSparkline(lineId, areaId, data, max) {
+  const { line, area } = buildSparkPath(data, max);
+  document.getElementById(lineId).setAttribute('d', line);
+  document.getElementById(areaId).setAttribute('d', area);
+}
+
+function update(d) {
+  const v = (x) => x != null;
+  const NA = '—';
+
+  // Navbar GPU info
+  document.getElementById('gpuName').textContent = d.gpu_name;
+  const vramBadge = document.getElementById('gpuVramBadge');
+  if (v(d.vram_total_mb)) {
+    vramBadge.textContent = (d.vram_total_mb / 1024).toFixed(0) + ' GB VRAM';
+    vramBadge.style.display = '';
+  }
+
+  // Utilization
+  document.getElementById('gpuUtil').textContent = v(d.gpu_utilization) ? d.gpu_utilization.toFixed(1) : NA;
+  document.getElementById('gpuUtilBar').style.width = v(d.gpu_utilization) ? d.gpu_utilization + '%' : '0%';
+
+  // VRAM
+  document.getElementById('vramUsed').textContent = v(d.vram_used_mb) ? d.vram_used_mb : NA;
+  if (v(d.vram_used_mb) && v(d.vram_total_mb)) {
+    document.getElementById('vramDetail').textContent = d.vram_used_mb + ' / ' + d.vram_total_mb + ' MB';
+    var vramPct = (d.vram_used_mb / d.vram_total_mb) * 100;
+    document.getElementById('vramBar').style.width = vramPct + '%';
+  } else {
+    document.getElementById('vramDetail').textContent = 'N/A';
+    var vramPct = 0;
+    document.getElementById('vramBar').style.width = '0%';
+  }
+
+  // Temperatures
+  setTemp('tempHotspot', 'tempHotspotItem', d.temperatures.hotspot);
+  setTemp('tempEdge', 'tempEdgeItem', d.temperatures.edge);
+  setTemp('tempMem', 'tempMemItem', d.temperatures.memory);
+
+  // Power
+  if (v(d.power_watts)) {
+    document.getElementById('powerWatts').textContent = d.power_watts.toFixed(1);
+    if (v(d.power_cap_watts) && d.power_cap_watts > 0) {
+      var pwrPct = (d.power_watts / d.power_cap_watts) * 100;
+      document.getElementById('powerPct').textContent = pwrPct.toFixed(0) + '% of cap';
+      document.getElementById('powerBar').style.width = Math.min(pwrPct, 100) + '%';
+      document.getElementById('powerCap').textContent = 'Cap: ' + d.power_cap_watts + ' W';
+      const powerBarEl = document.getElementById('powerBar');
+      if (pwrPct > 90) powerBarEl.classList.add('progress-fill-warn');
+      else powerBarEl.classList.remove('progress-fill-warn');
+    } else {
+      var pwrPct = 0;
+      document.getElementById('powerPct').textContent = '';
+      document.getElementById('powerBar').style.width = '0%';
+      document.getElementById('powerCap').textContent = '';
+    }
+  } else {
+    var pwrPct = 0;
+    document.getElementById('powerWatts').textContent = NA;
+    document.getElementById('powerPct').textContent = '';
+    document.getElementById('powerBar').style.width = '0%';
+    document.getElementById('powerCap').textContent = '';
+  }
+
+  // History & sparklines
+  history.util.push(v(d.gpu_utilization) ? d.gpu_utilization : 0);
+  history.vram.push(vramPct);
+  history.power.push(pwrPct);
+  if (history.util.length > HISTORY_LEN) history.util.shift();
+  if (history.vram.length > HISTORY_LEN) history.vram.shift();
+  if (history.power.length > HISTORY_LEN) history.power.shift();
+
+  updateSparkline('utilLine', 'utilArea', history.util, 100);
+  updateSparkline('vramLine', 'vramArea', history.vram, 100);
+  updateSparkline('powerLine', 'powerArea', history.power, 120);
+
+  // Fan
+  const fanCard = document.getElementById('fanCard');
+  if (d.fan) {
+    fanCard.style.display = '';
+    document.getElementById('fanRpm').textContent = d.fan.speed_rpm;
+    document.getElementById('fanPct').textContent = d.fan.speed_pct.toFixed(1) + '%';
+    document.getElementById('fanMax').textContent = 'Max: ' + d.fan.max_rpm + ' RPM';
+    document.getElementById('fanBar').style.width = d.fan.speed_pct + '%';
+  } else {
+    fanCard.style.display = 'none';
+  }
+}
+
+// ─── Cursor Glow ───
+document.addEventListener('mousemove', (e) => {
+  const glow = document.getElementById('cursorGlow');
+  glow.style.left = e.clientX + 'px';
+  glow.style.top = e.clientY + 'px';
+});
+
+// ─── WebSocket ───
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(proto + '//' + location.host + '/ws');
+
+  ws.onopen = () => setStatus(true);
+  ws.onclose = () => {
+    setStatus(false);
+    setTimeout(connect, 2000);
+  };
+  ws.onerror = () => ws.close();
+  ws.onmessage = (e) => {
+    try { update(JSON.parse(e.data)); } catch {}
+  };
+}
+
+connect();
+</script>
+</body>
+</html>
