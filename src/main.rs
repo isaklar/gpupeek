@@ -111,6 +111,10 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3333").await.unwrap();
     println!("🌐 Dashboard at http://localhost:3333");
+
+    // Open browser automatically
+    let _ = open::that("http://localhost:3333");
+
     axum::serve(listener, app).await.unwrap();
 }
 

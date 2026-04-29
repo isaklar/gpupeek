@@ -65,7 +65,7 @@ fn find_hwmon(card_path: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
 }
 
 fn read_gpu_name(card_path: &Path) -> String {
-    // Try the product name from the PCI subsystem
+    // Try product_name (available on some kernels/cards)
     let product = card_path.join("product_name");
     if let Ok(name) = fs::read_to_string(&product) {
         let name = name.trim().to_string();
@@ -73,7 +73,53 @@ fn read_gpu_name(card_path: &Path) -> String {
             return name;
         }
     }
-    // Fallback: try uevent for a model string
+
+    // Try the PCI device's label
+    if let Ok(name) = fs::read_to_string(card_path.join("label")) {
+        let name = name.trim().to_string();
+        if !name.is_empty() {
+            return name;
+        }
+    }
+
+    // Try lspci for the proper marketing name
+    if let Ok(uevent) = fs::read_to_string(card_path.join("uevent")) {
+        let mut slot = None;
+        for line in uevent.lines() {
+            if let Some(val) = line.strip_prefix("PCI_SLOT_NAME=") {
+                slot = Some(val.to_string());
+            }
+        }
+        if let Some(slot) = slot {
+            // Try lspci for a proper name
+            if let Ok(output) = std::process::Command::new("lspci")
+                .args(["-s", &slot, "-m"])
+                .output()
+            {
+                if output.status.success() {
+                    let stdout = String::from_utf8_lossy(&output.stdout);
+                    // lspci -m format: fields are quoted, 4th field is the device name
+                    let fields: Vec<&str> = stdout
+                        .lines()
+                        .next()
+                        .unwrap_or("")
+                        .split('"')
+                        .collect();
+                    // Fields: [slot, "", class, "", vendor, "", device, "", ...]
+                    if fields.len() >= 7 {
+                        let device_name = fields[5].trim();
+                        let vendor_name = fields[3].trim();
+                        if !device_name.is_empty() {
+                            // Return just the device name (vendor is already implied)
+                            return format!("{} {}", vendor_name, device_name);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Final fallback with PCI slot
     if let Ok(uevent) = fs::read_to_string(card_path.join("uevent")) {
         for line in uevent.lines() {
             if let Some(val) = line.strip_prefix("PCI_SLOT_NAME=") {
