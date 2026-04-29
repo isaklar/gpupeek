@@ -2,6 +2,8 @@
 
 A sleek, real-time GPU monitoring dashboard served as a local web page. Built in Rust with a WebSocket backend and a dark-themed frontend inspired by modern design systems.
 
+![GPUPeek Dashboard](assets/screenshot.png)
+
 ## Features
 
 - **Real-time metrics** — GPU utilization, VRAM usage, temperatures (edge/hotspot/memory), power draw, fan speed
