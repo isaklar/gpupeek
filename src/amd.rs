@@ -160,6 +160,34 @@ fn read_temp_by_label(map: &HashMap<String, PathBuf>, label: &str) -> Option<f64
     read_sysfs_f64(path).map(|t| t / 1000.0)
 }
 
+/// Read the currently active clock from pp_dpm_sclk/pp_dpm_mclk.
+/// Active line is marked with a trailing '*'.
+fn read_amd_clock(card_path: &Path, file: &str) -> Option<u32> {
+    let content = fs::read_to_string(card_path.join(file)).ok()?;
+    for line in content.lines() {
+        if line.ends_with('*') {
+            // Format: "1: 2500Mhz *" — extract the MHz value
+            let mhz_str = line.split_whitespace()
+                .find(|s| s.ends_with("Mhz") || s.ends_with("MHz"))?;
+            return mhz_str.trim_end_matches("Mhz")
+                .trim_end_matches("MHz")
+                .parse().ok();
+        }
+    }
+    None
+}
+
+/// Read the maximum clock (last line) from pp_dpm_sclk/pp_dpm_mclk.
+fn read_amd_clock_max(card_path: &Path, file: &str) -> Option<u32> {
+    let content = fs::read_to_string(card_path.join(file)).ok()?;
+    let last_line = content.lines().last()?;
+    let mhz_str = last_line.split_whitespace()
+        .find(|s| s.ends_with("Mhz") || s.ends_with("MHz"))?;
+    mhz_str.trim_end_matches("Mhz")
+        .trim_end_matches("MHz")
+        .parse().ok()
+}
+
 impl DataSource for AmdSource {
     fn snapshot(&mut self) -> Result<GpuSnapshot, Box<dyn std::error::Error>> {
         let utilization = read_sysfs_f64(&self.card_path.join("gpu_busy_percent"));
@@ -212,6 +240,10 @@ impl DataSource for AmdSource {
             fan,
             power_watts,
             power_cap_watts,
+            gpu_clock_mhz: read_amd_clock(&self.card_path, "pp_dpm_sclk"),
+            gpu_clock_max_mhz: read_amd_clock_max(&self.card_path, "pp_dpm_sclk"),
+            vram_clock_mhz: read_amd_clock(&self.card_path, "pp_dpm_mclk"),
+            vram_clock_max_mhz: read_amd_clock_max(&self.card_path, "pp_dpm_mclk"),
             timestamp_ms: now_ms(),
         })
     }

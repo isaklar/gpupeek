@@ -11,6 +11,10 @@ pub struct GpuSnapshot {
     pub fan: Option<FanData>,
     pub power_watts: Option<f64>,
     pub power_cap_watts: Option<f64>,
+    pub gpu_clock_mhz: Option<u32>,
+    pub gpu_clock_max_mhz: Option<u32>,
+    pub vram_clock_mhz: Option<u32>,
+    pub vram_clock_max_mhz: Option<u32>,
     pub timestamp_ms: u64,
 }
 

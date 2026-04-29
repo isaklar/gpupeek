@@ -572,6 +572,35 @@ body {
       <div class="progress-fill" id="fanBar" style="width:0%"></div>
     </div>
   </div>
+
+  <!-- Clock Speeds -->
+  <div class="card" id="clockCard">
+    <div class="card-shine"></div>
+    <div class="card-label">
+      <div class="label-line"></div>
+      <span class="label-text">Clock Speeds</span>
+    </div>
+    <div class="temp-grid">
+      <div class="temp-item">
+        <div>
+          <div class="temp-label">GPU Core <span class="temp-label-sub">SCLK</span></div>
+        </div>
+        <span class="temp-value temp-cool" id="gpuClock" style="font-size:1rem">— MHz</span>
+      </div>
+      <div class="temp-item">
+        <div>
+          <div class="temp-label">VRAM <span class="temp-label-sub">MCLK</span></div>
+        </div>
+        <span class="temp-value temp-cool" id="vramClock" style="font-size:1rem">— MHz</span>
+      </div>
+    </div>
+    <div class="sparkline-container">
+      <svg class="sparkline" viewBox="0 0 200 50" preserveAspectRatio="none">
+        <path class="sparkline-area" id="clockArea"></path>
+        <path class="sparkline-line" id="clockLine"></path>
+      </svg>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -580,6 +609,7 @@ const history = {
   util: [],
   vram: [],
   power: [],
+  clock: [],
 };
 
 function setStatus(connected) {
@@ -715,6 +745,39 @@ function update(d) {
     document.getElementById('fanBar').style.width = d.fan.speed_pct + '%';
   } else {
     fanCard.style.display = 'none';
+  }
+
+  // Clocks
+  const clockCard = document.getElementById('clockCard');
+  const hasClocks = v(d.gpu_clock_mhz) || v(d.vram_clock_mhz);
+  if (hasClocks) {
+    clockCard.style.display = '';
+    const gpuClockEl = document.getElementById('gpuClock');
+    const vramClockEl = document.getElementById('vramClock');
+
+    if (v(d.gpu_clock_mhz)) {
+      const maxStr = v(d.gpu_clock_max_mhz) ? ' / ' + d.gpu_clock_max_mhz : '';
+      gpuClockEl.textContent = d.gpu_clock_mhz + maxStr + ' MHz';
+    } else {
+      gpuClockEl.textContent = '— MHz';
+    }
+
+    if (v(d.vram_clock_mhz)) {
+      const maxStr = v(d.vram_clock_max_mhz) ? ' / ' + d.vram_clock_max_mhz : '';
+      vramClockEl.textContent = d.vram_clock_mhz + maxStr + ' MHz';
+    } else {
+      vramClockEl.textContent = '— MHz';
+    }
+
+    var clockPct = 0;
+    if (v(d.gpu_clock_mhz) && v(d.gpu_clock_max_mhz) && d.gpu_clock_max_mhz > 0) {
+      clockPct = (d.gpu_clock_mhz / d.gpu_clock_max_mhz) * 100;
+    }
+    history.clock.push(clockPct);
+    if (history.clock.length > HISTORY_LEN) history.clock.shift();
+    updateSparkline('clockLine', 'clockArea', history.clock, 110);
+  } else {
+    clockCard.style.display = 'none';
   }
 }
 

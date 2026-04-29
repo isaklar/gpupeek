@@ -63,6 +63,11 @@ impl DataSource for NvidiaSource {
             .ok()
             .map(|mw| mw as f64 / 1000.0);
 
+        let gpu_clock_mhz = device.clock_info(nvml_wrapper::enum_wrappers::device::Clock::Graphics).ok();
+        let gpu_clock_max_mhz = device.max_clock_info(nvml_wrapper::enum_wrappers::device::Clock::Graphics).ok();
+        let vram_clock_mhz = device.clock_info(nvml_wrapper::enum_wrappers::device::Clock::Memory).ok();
+        let vram_clock_max_mhz = device.max_clock_info(nvml_wrapper::enum_wrappers::device::Clock::Memory).ok();
+
         Ok(GpuSnapshot {
             gpu_name: name,
             gpu_vendor: GpuVendor::Nvidia,
@@ -77,6 +82,10 @@ impl DataSource for NvidiaSource {
             fan: fan_data,
             power_watts,
             power_cap_watts,
+            gpu_clock_mhz,
+            gpu_clock_max_mhz,
+            vram_clock_mhz,
+            vram_clock_max_mhz,
             timestamp_ms: now_ms(),
         })
     }

@@ -115,9 +115,13 @@ impl DataSource for IntelSource {
                 hotspot: None,
                 memory: None,
             },
-            fan: None, // iGPUs typically have no dedicated fan
+            fan: None,
             power_watts,
             power_cap_watts,
+            gpu_clock_mhz: read_sysfs_u64(&self.card_path.join("gt_cur_freq_mhz")).map(|v| v as u32),
+            gpu_clock_max_mhz: read_sysfs_u64(&self.card_path.join("gt_max_freq_mhz")).map(|v| v as u32),
+            vram_clock_mhz: None,
+            vram_clock_max_mhz: None,
             timestamp_ms: now_ms(),
         })
     }

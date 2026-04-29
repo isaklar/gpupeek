@@ -83,6 +83,10 @@ impl DataSource for MockGpu {
             }),
             power_watts: Some((power * 10.0).round() / 10.0),
             power_cap_watts: Some(250.0),
+            gpu_clock_mhz: Some((1200.0 + self.load * 1200.0 + self.rng.random_range(-20.0..20.0)) as u32),
+            gpu_clock_max_mhz: Some(2500),
+            vram_clock_mhz: Some((800.0 + self.load * 1500.0 + self.rng.random_range(-10.0..10.0)) as u32),
+            vram_clock_max_mhz: Some(2500),
             timestamp_ms: now_ms(),
         })
     }
