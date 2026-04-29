@@ -2,6 +2,8 @@
 
 A sleek, real-time GPU monitoring dashboard served as a local web page. Built in Rust with a WebSocket backend and a dark-themed frontend inspired by modern design systems.
 
+> **Linux only** — gpupeek relies on Linux kernel interfaces (sysfs) for GPU data and does not support Windows or macOS.
+
 ![GPUPeek Dashboard](assets/screenshot.png)
 
 ## Features
