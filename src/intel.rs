@@ -1,5 +1,6 @@
 #![cfg(target_os = "linux")]
 
+use crate::gpu_control::{ControlError, ControlInfo, CurvePoint, FanMode, GpuControl};
 use crate::gpu_data::{now_ms, DataSource, GpuSnapshot, GpuVendor, Temperatures};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -124,5 +125,47 @@ impl DataSource for IntelSource {
             vram_clock_max_mhz: None,
             timestamp_ms: now_ms(),
         })
+    }
+}
+
+impl GpuControl for IntelSource {
+    fn get_control_info(&mut self) -> Result<ControlInfo, ControlError> {
+        Ok(ControlInfo {
+            fan_control_available: false,
+            fan_mode: None,
+            fan_manual_speed_pct: None,
+            fan_curve: None,
+            power_cap_available: false,
+            power_cap_watts: None,
+            power_cap_min_watts: None,
+            power_cap_max_watts: None,
+            power_cap_default_watts: None,
+            voltage_offset_available: false,
+            voltage_offset_mv: None,
+        })
+    }
+
+    fn set_fan_mode(&mut self, _mode: FanMode) -> Result<(), ControlError> {
+        Err(ControlError::Unsupported("GPU control not available for Intel".into()))
+    }
+
+    fn set_fan_speed(&mut self, _pct: f64) -> Result<(), ControlError> {
+        Err(ControlError::Unsupported("GPU control not available for Intel".into()))
+    }
+
+    fn set_fan_curve(&mut self, _curve: Vec<CurvePoint>) -> Result<(), ControlError> {
+        Err(ControlError::Unsupported("GPU control not available for Intel".into()))
+    }
+
+    fn set_power_cap(&mut self, _watts: f64) -> Result<(), ControlError> {
+        Err(ControlError::Unsupported("GPU control not available for Intel".into()))
+    }
+
+    fn set_voltage_offset(&mut self, _mv: i32) -> Result<(), ControlError> {
+        Err(ControlError::Unsupported("GPU control not available for Intel".into()))
+    }
+
+    fn apply_curve_tick(&mut self, _current_temp_c: Option<f64>) -> Option<f64> {
+        None
     }
 }

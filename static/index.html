@@ -171,17 +171,66 @@ body {
   50% { opacity: 0.8; box-shadow: 0 0 0 8px rgba(0, 212, 170, 0); }
 }
 
+/* ─── Tabs ─── */
+.tab-bar {
+  position: fixed;
+  top: 45px;
+  width: 100%;
+  display: flex;
+  gap: 0;
+  padding: 0 1.5rem;
+  z-index: 99;
+  background: rgba(10, 10, 11, 0.9);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s var(--ease);
+}
+
+.tab-btn:hover { color: var(--text); }
+
+.tab-btn.active {
+  color: var(--text);
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0.5rem;
+  right: 0.5rem;
+  height: 2px;
+  background: var(--gradient);
+  border-radius: 1px;
+}
+
 /* ─── Dashboard Grid ─── */
 .dashboard {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 3rem 1.25rem 1rem;
+  padding: 5.5rem 1.25rem 1rem;
   position: relative;
   z-index: 1;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
 }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 
 /* ─── Card ─── */
 .card {
@@ -404,13 +453,236 @@ body {
   margin-top: 0.15rem;
 }
 
+/* ─── Control Tab ─── */
+.control-panel {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 5.5rem 1.25rem 2rem;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.control-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+}
+
+.control-section-title {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.control-section-title .label-line {
+  width: 20px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 1px;
+}
+
+.control-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.control-row:last-child { margin-bottom: 0; }
+
+.control-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.control-label-sub {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  display: flex;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.toggle-option {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s var(--ease);
+  border: none;
+  background: none;
+}
+
+.toggle-option.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.toggle-option:hover:not(.active) {
+  color: var(--text);
+}
+
+/* Slider */
+.slider-row {
+  margin-top: 0.75rem;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.slider-value {
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.slider-bounds {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 100px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 8px rgba(108, 99, 255, 0.4);
+  cursor: pointer;
+  transition: transform 0.15s var(--ease);
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 8px rgba(108, 99, 255, 0.4);
+  cursor: pointer;
+}
+
+input[type="range"]:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Apply Button */
+.btn-apply {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--gradient);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.2s var(--ease), transform 0.1s var(--ease);
+}
+
+.btn-apply:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-apply:active { transform: translateY(0); }
+.btn-apply:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.btn-reset {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-elevated);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+
+.btn-reset:hover { border-color: var(--accent); color: var(--text); }
+
+.control-status {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  display: none;
+}
+
+.control-status.success {
+  display: block;
+  color: var(--accent-2);
+  background: rgba(0, 212, 170, 0.08);
+  border: 1px solid rgba(0, 212, 170, 0.2);
+}
+
+.control-status.error {
+  display: block;
+  color: var(--danger);
+  background: rgba(255, 80, 80, 0.08);
+  border: 1px solid rgba(255, 80, 80, 0.2);
+}
+
+.control-unavailable {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 1024px) {
   .dashboard { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 768px) {
   .navbar { padding: 0.5rem 1rem; }
-  .dashboard { grid-template-columns: 1fr; padding: 3rem 1rem 1rem; }
+  .dashboard { grid-template-columns: 1fr; padding: 5.5rem 1rem 1rem; }
+  .control-panel { padding: 5.5rem 1rem 2rem; }
   .cursor-glow { display: none; }
   .nav-gpu-name { display: none; }
 }
@@ -437,6 +709,13 @@ body {
   </div>
 </nav>
 
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+  <button class="tab-btn" data-tab="control" id="controlTabBtn" style="display:none">Control</button>
+</div>
+
+<!-- ═══════ DASHBOARD TAB ═══════ -->
+<div class="tab-content active" id="tab-dashboard">
 <div class="dashboard">
   <!-- GPU Utilization -->
   <div class="card">
@@ -602,6 +881,152 @@ body {
     </div>
   </div>
 </div>
+</div>
+
+<!-- ═══════ CONTROL TAB ═══════ -->
+<div class="tab-content" id="tab-control">
+<div class="control-panel">
+
+  <!-- Fan Control Section -->
+  <div class="control-section" id="fanControlSection">
+    <div class="control-section-title">
+      <div class="label-line"></div>
+      Fan Control
+    </div>
+
+    <div class="control-row">
+      <div>
+        <div class="control-label">Fan Mode</div>
+        <div class="control-label-sub">Auto, fixed manual speed, or custom temperature curve</div>
+      </div>
+      <div class="toggle-switch">
+        <button class="toggle-option active" id="fanModeAuto" onclick="setFanMode('auto')">Auto</button>
+        <button class="toggle-option" id="fanModeManual" onclick="setFanMode('manual')">Manual</button>
+        <button class="toggle-option" id="fanModeCurve" onclick="setFanMode('curve')">Curve</button>
+      </div>
+    </div>
+
+    <!-- Manual speed slider -->
+    <div class="slider-row" id="fanSliderRow" style="display:none;">
+      <div class="slider-header">
+        <span class="control-label">Fan Speed</span>
+        <span class="slider-value" id="fanSliderValue">50%</span>
+      </div>
+      <input type="range" id="fanSlider" min="0" max="100" value="50" step="1"
+             oninput="document.getElementById('fanSliderValue').textContent = this.value + '%'">
+      <div style="display:flex; justify-content:space-between; margin-top:0.3rem;">
+        <span class="slider-bounds">0%</span>
+        <span class="slider-bounds">100%</span>
+      </div>
+      <div style="margin-top:0.75rem;">
+        <button class="btn-apply" onclick="applyFanSpeed()">Apply</button>
+      </div>
+    </div>
+
+    <!-- Fan curve editor -->
+    <div id="fanCurveEditor" style="display:none; margin-top:0.75rem;">
+      <div style="position:relative; background:var(--bg-elevated); border:1px solid var(--border); border-radius:10px; padding:0.75rem;">
+        <svg id="curveCanvas" width="100%" height="250" viewBox="0 0 500 250" style="display:block; cursor:crosshair;">
+          <!-- Grid lines -->
+          <defs>
+            <pattern id="curveGrid" width="50" height="25" patternUnits="userSpaceOnUse">
+              <path d="M 50 0 L 0 0 0 25" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="500" height="250" fill="url(#curveGrid)"/>
+          <!-- Axis labels rendered by JS -->
+          <g id="curveAxisLabels"></g>
+          <!-- Curve path -->
+          <path id="curvePath" fill="none" stroke="url(#sparkGradient)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path id="curveArea" fill="rgba(108, 99, 255, 0.08)"/>
+          <!-- Points rendered by JS -->
+          <g id="curvePoints"></g>
+          <!-- Current temp indicator -->
+          <line id="curveTempLine" x1="0" y1="0" x2="0" y2="250" stroke="rgba(255,80,80,0.5)" stroke-width="1" stroke-dasharray="4,4" style="display:none"/>
+          <circle id="curveTempDot" r="5" fill="#ff5050" style="display:none"/>
+        </svg>
+        <div style="display:flex; justify-content:space-between; margin-top:0.4rem;">
+          <span class="slider-bounds">Temperature (°C) →</span>
+          <span class="slider-bounds">Click to add points • Drag to move • Right-click to remove</span>
+        </div>
+      </div>
+      <div style="display:flex; gap:0.5rem; margin-top:0.75rem; align-items:center;">
+        <button class="btn-apply" onclick="applyFanCurve()">Apply Curve</button>
+        <button class="btn-reset" onclick="resetCurve()">Reset</button>
+        <span class="mono" id="curvePointCount" style="margin-left:auto;">4 points</span>
+      </div>
+    </div>
+
+    <div class="control-status" id="fanStatus"></div>
+  </div>
+
+  <!-- Power Cap Section -->
+  <div class="control-section" id="powerCapSection">
+    <div class="control-section-title">
+      <div class="label-line"></div>
+      Power Cap
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-header">
+        <span class="control-label">Power Limit</span>
+        <span class="slider-value" id="powerCapSliderValue">— W</span>
+        <span class="slider-value" id="powerCapPct" style="margin-left:0.5rem; color:var(--accent-2); font-size:0.7rem;"></span>
+      </div>
+      <input type="range" id="powerCapSlider" min="100" max="350" value="250" step="1"
+             oninput="updatePowerCapDisplay(this.value)">
+      <div style="display:flex; justify-content:space-between; margin-top:0.3rem;">
+        <span class="slider-bounds" id="powerCapMin">100 W</span>
+        <span class="slider-bounds" id="powerCapDefault" style="color:var(--accent-2)">Default: — W</span>
+        <span class="slider-bounds" id="powerCapMax">350 W</span>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+      <button class="btn-apply" onclick="applyPowerCap()">Apply</button>
+      <button class="btn-reset" onclick="resetPowerCap()">Reset to Default</button>
+    </div>
+
+    <div class="control-status" id="powerCapStatus"></div>
+  </div>
+
+  <!-- Voltage Offset Section -->
+  <div class="control-section" id="voltageOffsetSection" style="display:none;">
+    <div class="control-section-title">
+      <div class="label-line"></div>
+      Voltage Offset
+    </div>
+
+    <div class="slider-row">
+      <div class="slider-header">
+        <span class="control-label">VDDGFX Offset</span>
+        <span class="slider-value" id="voltageOffsetValue">0 mV</span>
+      </div>
+      <input type="range" id="voltageOffsetSlider" min="-200" max="200" value="0" step="5"
+             oninput="document.getElementById('voltageOffsetValue').textContent = this.value + ' mV'">
+      <div style="display:flex; justify-content:space-between; margin-top:0.3rem;">
+        <span class="slider-bounds">-200 mV</span>
+        <span class="slider-bounds" style="color:var(--accent-2)">0 mV (default)</span>
+        <span class="slider-bounds">+200 mV</span>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+      <button class="btn-apply" onclick="applyVoltageOffset()">Apply</button>
+      <button class="btn-reset" onclick="resetVoltageOffset()">Reset to 0 mV</button>
+    </div>
+
+    <div class="control-status" id="voltageOffsetStatus"></div>
+  </div>
+
+  <!-- Unavailable message (shown when no controls available) -->
+  <div class="control-unavailable" id="controlUnavailable" style="display:none">
+    <p>GPU control is not available for this device.</p>
+    <p style="margin-top:0.5rem; font-size:0.75rem;">Fan and power controls require AMD GPU with writable sysfs interfaces (may need root).</p>
+  </div>
+
+</div>
+</div>
 
 <script>
 const HISTORY_LEN = 60;
@@ -612,6 +1037,448 @@ const history = {
   clock: [],
 };
 
+let controlInfo = null;
+let powerCapDefault = null;
+
+// ─── Tab Switching ───
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'control') fetchControlInfo();
+  });
+});
+
+// ─── Control API ───
+// Fan curve state
+let curvePoints = [
+  { temp_c: 30, speed_pct: 25 },
+  { temp_c: 50, speed_pct: 35 },
+  { temp_c: 70, speed_pct: 70 },
+  { temp_c: 85, speed_pct: 100 },
+];
+let draggingPoint = null;
+let currentGpuTemp = null;
+
+async function fetchControlInfo() {
+  try {
+    const res = await fetch('/api/control');
+    if (!res.ok) return;
+    controlInfo = await res.json();
+    updateControlUI();
+  } catch (e) {
+    console.error('Failed to fetch control info:', e);
+  }
+}
+
+function updateControlUI() {
+  const c = controlInfo;
+  const hasAnyControl = c.fan_control_available || c.power_cap_available || c.voltage_offset_available;
+
+  if (!hasAnyControl) {
+    document.getElementById('fanControlSection').style.display = 'none';
+    document.getElementById('powerCapSection').style.display = 'none';
+    document.getElementById('voltageOffsetSection').style.display = 'none';
+    document.getElementById('controlUnavailable').style.display = '';
+    return;
+  }
+
+  document.getElementById('controlUnavailable').style.display = 'none';
+
+  // Fan control
+  if (c.fan_control_available) {
+    document.getElementById('fanControlSection').style.display = '';
+    const mode = c.fan_mode || 'auto';
+    document.getElementById('fanModeAuto').classList.toggle('active', mode === 'auto');
+    document.getElementById('fanModeManual').classList.toggle('active', mode === 'manual');
+    document.getElementById('fanModeCurve').classList.toggle('active', mode === 'curve');
+
+    document.getElementById('fanSliderRow').style.display = mode === 'manual' ? '' : 'none';
+    document.getElementById('fanCurveEditor').style.display = mode === 'curve' ? '' : 'none';
+
+    if (mode === 'manual' && c.fan_manual_speed_pct != null) {
+      document.getElementById('fanSlider').value = Math.round(c.fan_manual_speed_pct);
+      document.getElementById('fanSliderValue').textContent = Math.round(c.fan_manual_speed_pct) + '%';
+    }
+    if (c.fan_curve && c.fan_curve.length > 0) {
+      curvePoints = c.fan_curve.map(p => ({ temp_c: p.temp_c, speed_pct: p.speed_pct }));
+      renderCurve();
+    }
+  } else {
+    document.getElementById('fanControlSection').style.display = 'none';
+  }
+
+  // Power cap
+  if (c.power_cap_available) {
+    document.getElementById('powerCapSection').style.display = '';
+    const slider = document.getElementById('powerCapSlider');
+    if (c.power_cap_min_watts != null) {
+      slider.min = Math.round(c.power_cap_min_watts);
+      document.getElementById('powerCapMin').textContent = Math.round(c.power_cap_min_watts) + ' W';
+    }
+    if (c.power_cap_max_watts != null) {
+      slider.max = Math.round(c.power_cap_max_watts);
+      document.getElementById('powerCapMax').textContent = Math.round(c.power_cap_max_watts) + ' W';
+    }
+    if (c.power_cap_default_watts != null) {
+      powerCapDefault = c.power_cap_default_watts;
+      document.getElementById('powerCapDefault').textContent = 'Default: ' + Math.round(c.power_cap_default_watts) + ' W';
+    }
+    if (c.power_cap_watts != null) {
+      slider.value = Math.round(c.power_cap_watts);
+      updatePowerCapDisplay(Math.round(c.power_cap_watts));
+    }
+  } else {
+    document.getElementById('powerCapSection').style.display = 'none';
+  }
+
+  // Voltage offset
+  if (c.voltage_offset_available) {
+    document.getElementById('voltageOffsetSection').style.display = '';
+    if (c.voltage_offset_mv != null) {
+      document.getElementById('voltageOffsetSlider').value = c.voltage_offset_mv;
+      document.getElementById('voltageOffsetValue').textContent = c.voltage_offset_mv + ' mV';
+    }
+  } else {
+    document.getElementById('voltageOffsetSection').style.display = 'none';
+  }
+}
+
+async function setFanMode(mode) {
+  // Update UI immediately for responsiveness
+  document.getElementById('fanModeAuto').classList.toggle('active', mode === 'auto');
+  document.getElementById('fanModeManual').classList.toggle('active', mode === 'manual');
+  document.getElementById('fanModeCurve').classList.toggle('active', mode === 'curve');
+  document.getElementById('fanSliderRow').style.display = mode === 'manual' ? '' : 'none';
+  document.getElementById('fanCurveEditor').style.display = mode === 'curve' ? '' : 'none';
+
+  if (mode === 'curve') {
+    renderCurve();
+    return; // Don't send to backend yet — user will click "Apply Curve"
+  }
+  try {
+    const res = await fetch('/api/fan/mode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode }),
+    });
+    if (res.ok) {
+      showStatus('fanStatus', 'success', 'Fan mode set to ' + mode);
+      fetchControlInfo();
+    } else {
+      const data = await res.json();
+      showStatus('fanStatus', 'error', data.error || 'Failed');
+    }
+  } catch (e) {
+    showStatus('fanStatus', 'error', e.message);
+  }
+}
+
+async function applyFanSpeed() {
+  const pct = parseInt(document.getElementById('fanSlider').value);
+  try {
+    const res = await fetch('/api/fan/speed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ speed_pct: pct }),
+    });
+    if (res.ok) {
+      showStatus('fanStatus', 'success', 'Fan speed set to ' + pct + '%');
+      fetchControlInfo();
+    } else {
+      const data = await res.json();
+      showStatus('fanStatus', 'error', data.error || 'Failed');
+    }
+  } catch (e) {
+    showStatus('fanStatus', 'error', e.message);
+  }
+}
+
+async function applyFanCurve() {
+  try {
+    const res = await fetch('/api/fan/curve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ points: curvePoints }),
+    });
+    if (res.ok) {
+      showStatus('fanStatus', 'success', 'Fan curve applied (' + curvePoints.length + ' points)');
+      fetchControlInfo();
+    } else {
+      const data = await res.json();
+      showStatus('fanStatus', 'error', data.error || 'Failed');
+    }
+  } catch (e) {
+    showStatus('fanStatus', 'error', e.message);
+  }
+}
+
+function resetCurve() {
+  curvePoints = [
+    { temp_c: 30, speed_pct: 25 },
+    { temp_c: 50, speed_pct: 35 },
+    { temp_c: 70, speed_pct: 70 },
+    { temp_c: 85, speed_pct: 100 },
+  ];
+  renderCurve();
+}
+
+// ─── Fan Curve Visual Editor ───
+const CURVE_W = 500, CURVE_H = 250;
+const PAD_L = 28, PAD_R = 5, PAD_T = 10, PAD_B = 16;
+const DRAW_W = CURVE_W - PAD_L - PAD_R;
+const DRAW_H = CURVE_H - PAD_T - PAD_B;
+const TEMP_MIN = 20, TEMP_MAX = 110;
+const SPEED_MIN = 0, SPEED_MAX = 100;
+
+function tempToX(t) { return PAD_L + ((t - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)) * DRAW_W; }
+function xToTemp(x) { return ((x - PAD_L) / DRAW_W) * (TEMP_MAX - TEMP_MIN) + TEMP_MIN; }
+function speedToY(s) { return PAD_T + DRAW_H - ((s - SPEED_MIN) / (SPEED_MAX - SPEED_MIN)) * DRAW_H; }
+function yToSpeed(y) { return ((PAD_T + DRAW_H - y) / DRAW_H) * (SPEED_MAX - SPEED_MIN) + SPEED_MIN; }
+
+function renderCurve() {
+  // Sort points
+  curvePoints.sort((a, b) => a.temp_c - b.temp_c);
+
+  // Draw curve path
+  const pathEl = document.getElementById('curvePath');
+  const areaEl = document.getElementById('curveArea');
+  if (curvePoints.length >= 2) {
+    const d = curvePoints.map((p, i) => {
+      const x = tempToX(p.temp_c), y = speedToY(p.speed_pct);
+      return (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+    }).join('');
+    pathEl.setAttribute('d', d);
+    const lastP = curvePoints[curvePoints.length - 1];
+    const firstP = curvePoints[0];
+    areaEl.setAttribute('d', d + 'L' + tempToX(lastP.temp_c).toFixed(1) + ',' + (PAD_T + DRAW_H) + 'L' + tempToX(firstP.temp_c).toFixed(1) + ',' + (PAD_T + DRAW_H) + 'Z');
+  } else if (curvePoints.length === 1) {
+    const x = tempToX(curvePoints[0].temp_c), y = speedToY(curvePoints[0].speed_pct);
+    pathEl.setAttribute('d', 'M' + x + ',' + y);
+    areaEl.setAttribute('d', '');
+  } else {
+    pathEl.setAttribute('d', '');
+    areaEl.setAttribute('d', '');
+  }
+
+  // Draw points
+  const pointsG = document.getElementById('curvePoints');
+  pointsG.innerHTML = '';
+  curvePoints.forEach((p, i) => {
+    const x = tempToX(p.temp_c), y = speedToY(p.speed_pct);
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', x);
+    circle.setAttribute('cy', y);
+    circle.setAttribute('r', '8');
+    circle.setAttribute('fill', 'var(--accent)');
+    circle.setAttribute('stroke', 'var(--bg)');
+    circle.setAttribute('stroke-width', '2');
+    circle.setAttribute('data-index', i);
+    circle.style.cursor = 'grab';
+    circle.style.filter = 'drop-shadow(0 0 4px rgba(108, 99, 255, 0.5))';
+
+    // Tooltip
+    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+    title.textContent = Math.round(p.temp_c) + '°C → ' + Math.round(p.speed_pct) + '%';
+    circle.appendChild(title);
+
+    pointsG.appendChild(circle);
+  });
+
+  // Draw axis labels
+  const labelsG = document.getElementById('curveAxisLabels');
+  labelsG.innerHTML = '';
+  // Temp axis (bottom)
+  for (let t = TEMP_MIN; t <= TEMP_MAX; t += 10) {
+    const x = tempToX(t);
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', x);
+    text.setAttribute('y', PAD_T + DRAW_H + 12);
+    text.setAttribute('text-anchor', 'middle');
+    text.setAttribute('fill', 'rgba(255,255,255,0.25)');
+    text.setAttribute('font-size', '9');
+    text.setAttribute('font-family', 'var(--mono)');
+    text.textContent = t + '°';
+    labelsG.appendChild(text);
+  }
+  // Speed axis (left)
+  for (let s = 0; s <= 100; s += 25) {
+    const y = speedToY(s);
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', '2');
+    text.setAttribute('y', y + 3);
+    text.setAttribute('text-anchor', 'start');
+    text.setAttribute('fill', 'rgba(255,255,255,0.25)');
+    text.setAttribute('font-size', '9');
+    text.setAttribute('font-family', 'var(--mono)');
+    text.textContent = s + '%';
+    labelsG.appendChild(text);
+  }
+
+  // Current temp indicator
+  if (currentGpuTemp != null) {
+    const tempLine = document.getElementById('curveTempLine');
+    const tempDot = document.getElementById('curveTempDot');
+    const tx = tempToX(currentGpuTemp);
+    tempLine.setAttribute('x1', tx);
+    tempLine.setAttribute('x2', tx);
+    tempLine.style.display = '';
+    // Find interpolated speed at current temp
+    let interpSpeed = 0;
+    if (curvePoints.length >= 2) {
+      if (currentGpuTemp <= curvePoints[0].temp_c) interpSpeed = curvePoints[0].speed_pct;
+      else if (currentGpuTemp >= curvePoints[curvePoints.length-1].temp_c) interpSpeed = curvePoints[curvePoints.length-1].speed_pct;
+      else {
+        for (let i = 0; i < curvePoints.length - 1; i++) {
+          if (currentGpuTemp >= curvePoints[i].temp_c && currentGpuTemp <= curvePoints[i+1].temp_c) {
+            const t = (currentGpuTemp - curvePoints[i].temp_c) / (curvePoints[i+1].temp_c - curvePoints[i].temp_c);
+            interpSpeed = curvePoints[i].speed_pct + t * (curvePoints[i+1].speed_pct - curvePoints[i].speed_pct);
+            break;
+          }
+        }
+      }
+    }
+    tempDot.setAttribute('cx', tx);
+    tempDot.setAttribute('cy', speedToY(interpSpeed));
+    tempDot.style.display = '';
+  }
+
+  document.getElementById('curvePointCount').textContent = curvePoints.length + ' point' + (curvePoints.length !== 1 ? 's' : '');
+}
+
+// Curve editor interaction
+(function() {
+  const svg = document.getElementById('curveCanvas');
+  if (!svg) return;
+
+  function getSvgCoords(e) {
+    const rect = svg.getBoundingClientRect();
+    const scaleX = CURVE_W / rect.width;
+    const scaleY = CURVE_H / rect.height;
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    };
+  }
+
+  svg.addEventListener('mousedown', (e) => {
+    if (e.button === 2) return; // right-click handled by contextmenu
+    const target = e.target;
+    if (target.tagName === 'circle' && target.dataset.index != null) {
+      draggingPoint = parseInt(target.dataset.index);
+      target.style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+  });
+
+  svg.addEventListener('mousemove', (e) => {
+    if (draggingPoint == null) return;
+    const coords = getSvgCoords(e);
+    const temp = Math.round(Math.max(TEMP_MIN, Math.min(TEMP_MAX, xToTemp(coords.x))));
+    const speed = Math.round(Math.max(SPEED_MIN, Math.min(SPEED_MAX, yToSpeed(coords.y))));
+    curvePoints[draggingPoint] = { temp_c: temp, speed_pct: speed };
+    renderCurve();
+  });
+
+  svg.addEventListener('mouseup', () => { draggingPoint = null; });
+  svg.addEventListener('mouseleave', () => { draggingPoint = null; });
+
+  // Click to add point
+  svg.addEventListener('click', (e) => {
+    if (e.target.tagName === 'circle') return;
+    const coords = getSvgCoords(e);
+    const temp = Math.round(Math.max(TEMP_MIN, Math.min(TEMP_MAX, xToTemp(coords.x))));
+    const speed = Math.round(Math.max(SPEED_MIN, Math.min(SPEED_MAX, yToSpeed(coords.y))));
+    curvePoints.push({ temp_c: temp, speed_pct: speed });
+    renderCurve();
+  });
+
+  // Right-click to remove point
+  svg.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    if (e.target.tagName === 'circle' && e.target.dataset.index != null) {
+      const idx = parseInt(e.target.dataset.index);
+      if (curvePoints.length > 2) {
+        curvePoints.splice(idx, 1);
+        renderCurve();
+      }
+    }
+  });
+})();
+
+async function applyPowerCap() {
+  const watts = parseInt(document.getElementById('powerCapSlider').value);
+  try {
+    const res = await fetch('/api/power-cap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ watts }),
+    });
+    if (res.ok) {
+      showStatus('powerCapStatus', 'success', 'Power cap set to ' + watts + ' W');
+      fetchControlInfo();
+    } else {
+      const data = await res.json();
+      showStatus('powerCapStatus', 'error', data.error || 'Failed');
+    }
+  } catch (e) {
+    showStatus('powerCapStatus', 'error', e.message);
+  }
+}
+
+async function resetPowerCap() {
+  if (powerCapDefault == null) return;
+  document.getElementById('powerCapSlider').value = Math.round(powerCapDefault);
+  updatePowerCapDisplay(Math.round(powerCapDefault));
+  applyPowerCap();
+}
+
+function updatePowerCapDisplay(watts) {
+  document.getElementById('powerCapSliderValue').textContent = watts + ' W';
+  const maxW = parseInt(document.getElementById('powerCapSlider').max);
+  if (maxW > 0) {
+    const pct = Math.round((watts / maxW) * 100);
+    document.getElementById('powerCapPct').textContent = '(' + pct + '% of max)';
+  }
+}
+
+async function applyVoltageOffset() {
+  const mv = parseInt(document.getElementById('voltageOffsetSlider').value);
+  try {
+    const res = await fetch('/api/voltage-offset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mv }),
+    });
+    if (res.ok) {
+      showStatus('voltageOffsetStatus', 'success', 'Voltage offset set to ' + mv + ' mV');
+      fetchControlInfo();
+    } else {
+      const data = await res.json();
+      showStatus('voltageOffsetStatus', 'error', data.error || 'Failed');
+    }
+  } catch (e) {
+    showStatus('voltageOffsetStatus', 'error', e.message);
+  }
+}
+
+function resetVoltageOffset() {
+  document.getElementById('voltageOffsetSlider').value = 0;
+  document.getElementById('voltageOffsetValue').textContent = '0 mV';
+  applyVoltageOffset();
+}
+
+function showStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = 'control-status ' + type;
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+// ─── Dashboard Status & Updates ───
 function setStatus(connected) {
   const dot = document.getElementById('statusDot');
   const txt = document.getElementById('statusText');
@@ -697,6 +1564,12 @@ function update(d) {
   setTemp('tempHotspot', 'tempHotspotItem', d.temperatures.hotspot);
   setTemp('tempEdge', 'tempEdgeItem', d.temperatures.edge);
   setTemp('tempMem', 'tempMemItem', d.temperatures.memory);
+
+  // Track current GPU temp for curve editor
+  currentGpuTemp = d.temperatures.hotspot || d.temperatures.edge || null;
+  if (document.getElementById('fanCurveEditor').style.display !== 'none') {
+    renderCurve();
+  }
 
   // Power
   if (v(d.power_watts)) {
@@ -787,6 +1660,22 @@ document.addEventListener('mousemove', (e) => {
   glow.style.left = e.clientX + 'px';
   glow.style.top = e.clientY + 'px';
 });
+
+// ─── Init: Check Control Availability & Show/Hide Tab ───
+async function initControlTab() {
+  try {
+    const res = await fetch('/api/control');
+    if (!res.ok) return;
+    controlInfo = await res.json();
+    const hasAnyControl = controlInfo.fan_control_available || controlInfo.power_cap_available || controlInfo.voltage_offset_available;
+    if (hasAnyControl) {
+      document.getElementById('controlTabBtn').style.display = '';
+    }
+  } catch (e) {
+    // Control tab stays hidden
+  }
+}
+initControlTab();
 
 // ─── WebSocket ───
 function connect() {
