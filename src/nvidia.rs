@@ -1,6 +1,10 @@
 use crate::gpu_data::{now_ms, DataSource, FanData, GpuSnapshot, GpuVendor, Temperatures};
 use nvml_wrapper::enum_wrappers::device::TemperatureSensor;
+use nvml_wrapper::enums::device::SampleValue;
+use nvml_wrapper::structs::device::FieldId;
 use nvml_wrapper::Nvml;
+
+const NVML_FI_DEV_MEMORY_TEMP: u32 = 82;
 
 pub struct NvidiaSource {
     nvml: Nvml,
@@ -41,6 +45,19 @@ impl DataSource for NvidiaSource {
             .ok()
             .map(|t| t as f64);
 
+        let memory_temp = device
+            .field_values_for(&[FieldId(NVML_FI_DEV_MEMORY_TEMP)])
+            .ok()
+            .and_then(|vals| vals.into_iter().next())
+            .and_then(|r| r.ok())
+            .and_then(|sample| match sample.value {
+                Ok(SampleValue::U32(v)) => Some(v as f64),
+                Ok(SampleValue::U64(v)) => Some(v as f64),
+                Ok(SampleValue::I64(v)) => Some(v as f64),
+                Ok(SampleValue::F64(v)) => Some(v),
+                _ => None,
+            });
+
         let fan_data = device.num_fans().ok().and_then(|n| {
             if n == 0 {
                 return None;
@@ -76,8 +93,8 @@ impl DataSource for NvidiaSource {
             vram_total_mb,
             temperatures: Temperatures {
                 edge: edge_temp,
-                hotspot: None, // not universally available via NVML
-                memory: None,
+                hotspot: None,
+                memory: memory_temp,
             },
             fan: fan_data,
             power_watts,
