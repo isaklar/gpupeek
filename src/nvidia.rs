@@ -12,6 +12,7 @@ const NVAPI_LIB: &str = "libnvidia-api.so.1";
 const NVAPI_QUERY_INTERFACE_SYM: &[u8] = b"nvapi_QueryInterface\0";
 
 const NVAPI_INITIALIZE: u32 = 0x0150e828;
+const NVAPI_UNLOAD: u32 = 0xd22bdd7e;
 const NVAPI_ENUM_PHYSICAL_GPUS: u32 = 0xe5ac921f;
 const NVAPI_GET_BUS_ID: u32 = 0x1be0b8e5;
 const NVAPI_GET_THERMALS: u32 = 0x65fe3aad;
@@ -65,6 +66,20 @@ struct NvApiState {
 // tied to the NVIDIA driver which manages its own thread-safety internally.
 unsafe impl Send for NvApiState {}
 
+impl Drop for NvApiState {
+    fn drop(&mut self) {
+        unsafe {
+            if let Ok(query) = self._lib.get::<NvApiQueryFn>(NVAPI_QUERY_INTERFACE_SYM) {
+                let unload_ptr = query(NVAPI_UNLOAD);
+                if !unload_ptr.is_null() {
+                    let unload: NvApiInitFn = std::mem::transmute(unload_ptr);
+                    unload();
+                }
+            }
+        }
+    }
+}
+
 impl NvApiState {
     fn new(pci_bus: u32) -> Option<Self> {
         unsafe {
@@ -105,6 +120,9 @@ impl NvApiState {
             let bus_fn: NvApiGetBusIdFn = std::mem::transmute(bus_ptr);
 
             let mut gpu_handle = handles[0]; // fallback: first GPU
+            if gpu_handle.is_null() {
+                return None;
+            }
             for i in 0..count as usize {
                 let mut id = 0u32;
                 if bus_fn(handles[i], &mut id) == 0 && id == pci_bus {
@@ -121,7 +139,9 @@ impl NvApiState {
             let thermals_fn: NvApiThermalsFn = std::mem::transmute(thermals_raw);
 
             // Calculate the valid sensor mask by iterating bit-by-bit until a
-            // call fails, mirroring the approach used by LACT.
+            // call fails. Cap at bit 30 to keep the mask positive (bit 31 would
+            // set the sign bit of i32, causing a panic in debug builds and
+            // potentially confusing the driver).
             let mut sensors = NvApiThermals {
                 version: nvapi_version::<NvApiThermals>(2),
                 mask: 1,
@@ -131,8 +151,8 @@ impl NvApiState {
                 return None;
             }
             let mut thermals_mask = 1i32;
-            for bit in 0..32i32 {
-                sensors.mask = 1 << bit;
+            for bit in 1u32..31 {
+                sensors.mask = 1i32 << bit;
                 if thermals_fn(gpu_handle, &mut sensors) != 0 {
                     thermals_mask = sensors.mask - 1;
                     break;
