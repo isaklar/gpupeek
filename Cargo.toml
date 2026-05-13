@@ -7,7 +7,7 @@ license = "MIT"
 
 [features]
 default = ["nvidia"]
-nvidia = ["dep:nvml-wrapper"]
+nvidia = ["dep:nvml-wrapper", "dep:libloading"]
 
 [dependencies]
 axum = { version = "0.8", features = ["ws"] }
@@ -17,4 +17,5 @@ serde_json = "1"
 tower-http = { version = "0.6", features = ["fs"] }
 rand = "0.9"
 nvml-wrapper = { version = "0.10", optional = true }
+libloading = { version = "0.8", optional = true }
 open = "5.3.4"
